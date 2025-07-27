@@ -122,7 +122,9 @@ local function toggleGUI()
 		MainFrame.Visible = GuiVisible
 	end
 end
+
 -- GUI BUILDER
+local function buildMainGUI()
 	if MainUI then MainUI:Destroy() end
 
 	MainUI = Instance.new("ScreenGui")
@@ -159,13 +161,13 @@ end
 	titleCorner.Parent = title
 
 	-- Make GUI Draggable
-	local dragging = false
+	local titleDragging = false
 	local dragStart = nil
 	local startPos = nil
 
 	title.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
+			titleDragging = true
 			dragStart = input.Position
 			startPos = MainFrame.Position
 		end
@@ -173,7 +175,7 @@ end
 
 	title.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			if dragging then
+			if titleDragging then
 				local delta = input.Position - dragStart
 				MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 			end
@@ -182,7 +184,7 @@ end
 
 	title.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
+			titleDragging = false
 		end
 	end)
 
@@ -396,19 +398,19 @@ end
 	noclipStatus.Parent = noclipSection
 
 	-- Slider Logic
-	local dragging = false
+	local sliderDragging = false
 	sliderButton.MouseButton1Down:Connect(function()
-		dragging = true
+		sliderDragging = true
 	end)
 
 	UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
+			sliderDragging = false
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		if sliderDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			local mouse = Players.LocalPlayer:GetMouse()
 			local relativeX = mouse.X - sliderBg.AbsolutePosition.X
 			local percentage = math.clamp(relativeX / sliderBg.AbsoluteSize.X, 0, 1)
@@ -457,7 +459,6 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 end)
 
 -- FLY MOTION
-local lastCFrame = nil
 RunService.RenderStepped:Connect(function()
 	if Flying then
 		local cam = workspace.CurrentCamera
@@ -479,7 +480,8 @@ RunService.RenderStepped:Connect(function()
 			end
 		elseif NetworkMethod == "CFrame" then
 			if moveVec.Magnitude > 0 then
-				local newPos = HumanoidRootPart.Position + (moveVec.Unit * Speed * RunService.RenderStepped:Wait())
+				local deltaTime = RunService.RenderStepped:Wait()
+				local newPos = HumanoidRootPart.Position + (moveVec.Unit * Speed * deltaTime)
 				HumanoidRootPart.CFrame = CFrame.new(newPos, newPos + cam.CFrame.LookVector)
 			end
 		elseif NetworkMethod == "Humanoid" then
